@@ -224,53 +224,48 @@ const PageNavigation: React.FC = () => {
           <div className="flex gap-2">
             {pages.map((page, idx) => (
               <React.Fragment key={page + "-frag-" + idx}>
-                <SortablePage
-                  id={`${page}-${idx}`}
-                  children={
-                    <>
-                      {/* Add button between pages (on hover) */}
-                      {idx !== 0 && (
-                        <button
-                          className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 w-7 h-7 flex items-center justify-center rounded-full border border-gray-300 bg-white text-gray-500 hover:bg-blue-100 hover:text-blue-600 mx-1"
-                          onClick={() => addPage(idx)}
-                          aria-label="Add page"
-                          type="button"
-                        >
-                          +
-                        </button>
-                      )}
-                      <div className="relative flex items-center">
-                        <button
-                          className={`flex items-center px-4 py-2 rounded-full border transition-colors duration-150 text-sm font-medium select-none
-                            ${
-                              idx === activeIndex
-                                ? "bg-white border-blue-500 text-blue-600 shadow"
-                                : "bg-gray-100 border-gray-200 text-gray-500 hover:bg-white hover:border-blue-300"
-                            }
-                          `}
-                          onClick={() => setActiveIndex(idx)}
-                          type="button"
-                        >
-                          {page}
-                        </button>
-                        {/* Three dots menu */}
-                        <button
-                          className="ml-1 p-1 rounded-full hover:bg-gray-200 text-gray-400 hover:text-gray-700 focus:outline-none"
-                          onClick={() => setMenuOpenIdx(idx)}
-                          type="button"
-                          tabIndex={-1}
-                        >
-                          <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="19" cy="12" r="1.5" fill="currentColor"/></svg>
-                        </button>
-                        <ContextMenu
-                          open={menuOpenIdx === idx}
-                          onClose={() => setMenuOpenIdx(null)}
-                          onAction={(action: string) => handleMenuAction(action, idx)}
-                        />
-                      </div>
-                    </>
-                  }
-                />
+                <SortablePage id={`${page}-${idx}`}>
+                  {/* Add button between pages (on hover) */}
+                  {idx !== 0 && (
+                    <button
+                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 w-7 h-7 flex items-center justify-center rounded-full border border-gray-300 bg-white text-gray-500 hover:bg-blue-100 hover:text-blue-600 mx-1"
+                      onClick={() => addPage(idx)}
+                      aria-label="Add page"
+                      type="button"
+                    >
+                      +
+                    </button>
+                  )}
+                  <div className="relative flex items-center">
+                    <button
+                      className={`flex items-center px-4 py-2 rounded-full border transition-colors duration-150 text-sm font-medium select-none
+                        ${
+                          idx === activeIndex
+                            ? "bg-white border-blue-500 text-blue-600 shadow"
+                            : "bg-gray-100 border-gray-200 text-gray-500 hover:bg-white hover:border-blue-300"
+                        }
+                      `}
+                      onClick={() => setActiveIndex(idx)}
+                      type="button"
+                    >
+                      {page}
+                    </button>
+                    {/* Three dots menu */}
+                    <button
+                      className="ml-1 p-1 rounded-full hover:bg-gray-200 text-gray-400 hover:text-gray-700 focus:outline-none"
+                      onClick={() => setMenuOpenIdx(idx)}
+                      type="button"
+                      tabIndex={-1}
+                    >
+                      <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="19" cy="12" r="1.5" fill="currentColor"/></svg>
+                    </button>
+                    <ContextMenu
+                      open={menuOpenIdx === idx}
+                      onClose={() => setMenuOpenIdx(null)}
+                      onAction={(action: string) => handleMenuAction(action, idx)}
+                    />
+                  </div>
+                </SortablePage>
               </React.Fragment>
             ))}
             {/* Add button at the end */}
