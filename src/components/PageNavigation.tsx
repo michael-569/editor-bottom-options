@@ -6,6 +6,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  DragEndEvent,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -17,10 +18,22 @@ import { CSS } from "@dnd-kit/utilities";
 
 const initialPages = ["Info", "Details", "Other", "Ending"];
 
-function useOutsideClick(ref: any, handler: () => void) {
+// Type definitions for props
+interface ContextMenuProps {
+  open: boolean;
+  onClose: () => void;
+  onAction: (action: string) => void;
+}
+
+interface SortablePageProps {
+  id: string;
+  children: React.ReactNode;
+}
+
+function useOutsideClick(ref: React.RefObject<HTMLDivElement>, handler: () => void) {
   useEffect(() => {
     function handleClick(event: MouseEvent) {
-      if (ref.current && !ref.current.contains(event.target)) {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
         handler();
       }
     }
@@ -29,8 +42,8 @@ function useOutsideClick(ref: any, handler: () => void) {
   }, [ref, handler]);
 }
 
-function ContextMenu({ open, onClose, onAction, idx }: any) {
-  const ref = useRef(null);
+function ContextMenu({ open, onClose, onAction }: ContextMenuProps) {
+  const ref = useRef<HTMLDivElement>(null!);
   useOutsideClick(ref, onClose);
   if (!open) return null;
   return (
@@ -100,7 +113,7 @@ function ContextMenu({ open, onClose, onAction, idx }: any) {
   );
 }
 
-function SortablePage({ id, idx, activeIndex, setActiveIndex, children }: any) {
+function SortablePage({ id, children }: SortablePageProps) {
   const {
     attributes,
     listeners,
@@ -178,21 +191,22 @@ const PageNavigation: React.FC = () => {
     // Other actions can be implemented here
   };
 
-  const handleDragEnd = (event: any) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    if (active.id !== over.id) {
-      const oldIndex = pages.findIndex((p, i) => `${p}-${i}` === active.id);
-      const newIndex = pages.findIndex((p, i) => `${p}-${i}` === over.id);
-      const newPages = arrayMove(pages, oldIndex, newIndex);
-      setPages(newPages);
-      // Update activeIndex if needed
-      if (activeIndex === oldIndex) {
-        setActiveIndex(newIndex);
-      } else if (oldIndex < activeIndex && newIndex >= activeIndex) {
-        setActiveIndex(activeIndex - 1);
-      } else if (oldIndex > activeIndex && newIndex <= activeIndex) {
-        setActiveIndex(activeIndex + 1);
-      }
+    if (!over || active.id !== over.id) {
+      return;
+    }
+    const oldIndex = pages.findIndex((p, i) => `${p}-${i}` === active.id);
+    const newIndex = pages.findIndex((p, i) => `${p}-${i}` === over.id);
+    const newPages = arrayMove(pages, oldIndex, newIndex);
+    setPages(newPages);
+    // Update activeIndex if needed
+    if (activeIndex === oldIndex) {
+      setActiveIndex(newIndex);
+    } else if (oldIndex < activeIndex && newIndex >= activeIndex) {
+      setActiveIndex(activeIndex - 1);
+    } else if (oldIndex > activeIndex && newIndex <= activeIndex) {
+      setActiveIndex(activeIndex + 1);
     }
   };
 
@@ -212,52 +226,51 @@ const PageNavigation: React.FC = () => {
               <React.Fragment key={page + "-frag-" + idx}>
                 <SortablePage
                   id={`${page}-${idx}`}
-                  idx={idx}
-                  activeIndex={activeIndex}
-                  setActiveIndex={setActiveIndex}
-                >
-                  {/* Add button between pages (on hover) */}
-                  {idx !== 0 && (
-                    <button
-                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 w-7 h-7 flex items-center justify-center rounded-full border border-gray-300 bg-white text-gray-500 hover:bg-blue-100 hover:text-blue-600 mx-1"
-                      onClick={() => addPage(idx)}
-                      aria-label="Add page"
-                      type="button"
-                    >
-                      +
-                    </button>
-                  )}
-                  <div className="relative flex items-center">
-                    <button
-                      className={`flex items-center px-4 py-2 rounded-full border transition-colors duration-150 text-sm font-medium select-none
-                        ${
-                          idx === activeIndex
-                            ? "bg-white border-blue-500 text-blue-600 shadow"
-                            : "bg-gray-100 border-gray-200 text-gray-500 hover:bg-white hover:border-blue-300"
-                        }
-                      `}
-                      onClick={() => setActiveIndex(idx)}
-                      type="button"
-                    >
-                      {page}
-                    </button>
-                    {/* Three dots menu */}
-                    <button
-                      className="ml-1 p-1 rounded-full hover:bg-gray-200 text-gray-400 hover:text-gray-700 focus:outline-none"
-                      onClick={() => setMenuOpenIdx(idx)}
-                      type="button"
-                      tabIndex={-1}
-                    >
-                      <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="19" cy="12" r="1.5" fill="currentColor"/></svg>
-                    </button>
-                    <ContextMenu
-                      open={menuOpenIdx === idx}
-                      onClose={() => setMenuOpenIdx(null)}
-                      onAction={(action: string) => handleMenuAction(action, idx)}
-                      idx={idx}
-                    />
-                  </div>
-                </SortablePage>
+                  children={
+                    <>
+                      {/* Add button between pages (on hover) */}
+                      {idx !== 0 && (
+                        <button
+                          className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 w-7 h-7 flex items-center justify-center rounded-full border border-gray-300 bg-white text-gray-500 hover:bg-blue-100 hover:text-blue-600 mx-1"
+                          onClick={() => addPage(idx)}
+                          aria-label="Add page"
+                          type="button"
+                        >
+                          +
+                        </button>
+                      )}
+                      <div className="relative flex items-center">
+                        <button
+                          className={`flex items-center px-4 py-2 rounded-full border transition-colors duration-150 text-sm font-medium select-none
+                            ${
+                              idx === activeIndex
+                                ? "bg-white border-blue-500 text-blue-600 shadow"
+                                : "bg-gray-100 border-gray-200 text-gray-500 hover:bg-white hover:border-blue-300"
+                            }
+                          `}
+                          onClick={() => setActiveIndex(idx)}
+                          type="button"
+                        >
+                          {page}
+                        </button>
+                        {/* Three dots menu */}
+                        <button
+                          className="ml-1 p-1 rounded-full hover:bg-gray-200 text-gray-400 hover:text-gray-700 focus:outline-none"
+                          onClick={() => setMenuOpenIdx(idx)}
+                          type="button"
+                          tabIndex={-1}
+                        >
+                          <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="19" cy="12" r="1.5" fill="currentColor"/></svg>
+                        </button>
+                        <ContextMenu
+                          open={menuOpenIdx === idx}
+                          onClose={() => setMenuOpenIdx(null)}
+                          onAction={(action: string) => handleMenuAction(action, idx)}
+                        />
+                      </div>
+                    </>
+                  }
+                />
               </React.Fragment>
             ))}
             {/* Add button at the end */}
